@@ -869,6 +869,85 @@
       cursor: not-allowed;
     }
 
+    /* ── Job application modal ── */
+    .job-modal-overlay {
+      display: none;
+      position: fixed; inset: 0;
+      background: rgba(0,0,0,0.7);
+      backdrop-filter: blur(3px);
+      z-index: 999;
+      align-items: center; justify-content: center;
+      padding: 20px;
+    }
+    .job-modal-overlay.open { display: flex; }
+    .job-modal {
+      background: #0e0e0e;
+      border: 1px solid #1e1e1e;
+      border-radius: 14px;
+      padding: clamp(24px, 3vw, 36px);
+      width: 100%; max-width: 480px;
+      max-height: 90vh;
+      overflow-y: auto;
+      position: relative;
+      display: flex; flex-direction: column; gap: 18px;
+      animation: jobModalIn 0.2s ease-out;
+    }
+    @keyframes jobModalIn {
+      from { opacity: 0; transform: translateY(10px) scale(0.98); }
+      to { opacity: 1; transform: translateY(0) scale(1); }
+    }
+    .job-modal-close {
+      position: absolute; top: 16px; right: 16px;
+      width: 32px; height: 32px; border-radius: 8px;
+      background: #181818; border: 1px solid #2a2a2a;
+      color: rgba(255,255,255,0.6);
+      display: flex; align-items: center; justify-content: center;
+      cursor: pointer; font-size: 15px; line-height: 1;
+      transition: color 0.15s, border-color 0.15s;
+    }
+    .job-modal-close:hover { color: #fff; border-color: rgba(0,174,207,0.4); }
+    .job-modal-head { padding-right: 32px; }
+    .job-modal-title {
+      font-size: clamp(20px, 2.4vw, 24px);
+      font-weight: 500; color: #fff;
+      letter-spacing: -0.5px; margin-bottom: 6px;
+    }
+    .job-modal-sub {
+      font-size: 13.5px; color: rgba(255,255,255,0.55);
+      line-height: 1.4; font-family: 'Work Sans', sans-serif;
+    }
+    .job-file-field {
+      border: 1px dashed #2a2a2a;
+      border-radius: 7px;
+      padding: 14px;
+      background: #181818;
+      display: flex; flex-direction: column; gap: 6px;
+      transition: border-color 0.15s;
+    }
+    .job-file-field.has-file { border-color: rgba(0,174,207,0.45); border-style: solid; }
+    .job-file-input-row {
+      display: flex; align-items: center; gap: 10px;
+    }
+    .job-file-btn {
+      font-size: 12.5px; font-weight: 600;
+      color: rgba(255,255,255,0.75);
+      background: #222; border: 1px solid #2a2a2a;
+      border-radius: 6px; padding: 7px 12px;
+      cursor: pointer; flex-shrink: 0;
+      font-family: 'Work Sans', sans-serif;
+      transition: border-color 0.15s;
+    }
+    .job-file-btn:hover { border-color: rgba(0,174,207,0.4); }
+    .job-file-name {
+      font-size: 13px; color: rgba(255,255,255,0.5);
+      font-family: 'Work Sans', sans-serif;
+      overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+    }
+    .job-file-hint {
+      font-size: 11.5px; color: rgba(255,255,255,0.3);
+      font-family: 'Work Sans', sans-serif;
+    }
+
     @media (max-width: 900px) {
       .contact-inner { grid-template-columns: 1fr; }
       .cf-row { grid-template-columns: 1fr; }
@@ -2030,6 +2109,7 @@
         <li><a href="#clientes">Clientes</a></li>
         <li><a href="#insights">Blog</a></li>
         <li><a href="#contacto">Contacto</a></li>
+        <li><a href="#" id="navJobLink">Solicitar Empleo</a></li>
       </ul>
       <div class="nav-right">
         <a href="tel:25200356" class="btn-ghost-nav" title="+506 2520-0356" aria-label="Llamar al +506 2520-0356"><svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M3 2.5h2.5l1 3L5 7a9.5 9.5 0 004 4l1.5-1.5 3 1V13A1.5 1.5 0 0112 14.5C6.2 14.5 1.5 9.8 1.5 4A1.5 1.5 0 013 2.5z" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round"/></svg></a>
@@ -2058,10 +2138,63 @@
       <a href="#insights" class="mob-link">Blog</a>
       <div class="mob-divider"></div>
       <a href="#contacto" class="mob-link">Contacto</a>
+      <div class="mob-divider"></div>
+      <a href="#" class="mob-link" id="mobJobLink">Solicitar Empleo</a>
     </div>
   </div>
 
-  <!-- HERO -->
+  <!-- JOB APPLICATION MODAL -->
+  <div class="job-modal-overlay" id="jobModalOverlay">
+    <div class="job-modal" role="dialog" aria-modal="true" aria-labelledby="jobModalTitle">
+      <button type="button" class="job-modal-close" id="jobModalClose" aria-label="Cerrar">&#x2715;</button>
+      <div class="job-modal-head">
+        <div class="job-modal-title" id="jobModalTitle">Solicitar Empleo</div>
+        <p class="job-modal-sub">Completá tus datos y adjuntá tu CV en formato PDF. Nuestro equipo de Recursos Humanos revisará tu solicitud.</p>
+      </div>
+
+      <form id="jobForm">
+        <input type="hidden" name="access_key" value="b0354a4a-d198-4a50-b50b-8044e35f28b3">
+        <input type="hidden" name="subject" value="Nueva solicitud de empleo - Serviarchivo">
+        <!-- Honeypot anti-spam -->
+        <input type="checkbox" name="botcheck" style="display:none" tabindex="-1" autocomplete="off">
+
+        <div style="display:flex; flex-direction:column; gap:18px;">
+          <div class="cf-field">
+            <label class="cf-label">Nombre completo</label>
+            <input type="text" name="nombre" class="cf-input" placeholder="María Rodríguez" required>
+          </div>
+          <div class="cf-field">
+            <label class="cf-label">Correo electrónico</label>
+            <input type="email" name="email" class="cf-input" placeholder="maria@correo.com" required>
+          </div>
+          <div class="cf-field">
+            <label class="cf-label">Teléfono</label>
+            <input type="tel" name="telefono" class="cf-input" placeholder="+506 0000-0000" required>
+          </div>
+          <div class="cf-field">
+            <label class="cf-label">Currículum (PDF)</label>
+            <div class="job-file-field" id="jobFileField">
+              <div class="job-file-input-row">
+                <button type="button" class="job-file-btn" id="jobFileBtn">Elegir archivo</button>
+                <span class="job-file-name" id="jobFileName">Ningún archivo seleccionado</span>
+              </div>
+              <span class="job-file-hint">Solo archivos PDF, máximo 5MB</span>
+            </div>
+            <input type="file" id="jobFileInput" accept="application/pdf,.pdf" style="display:none" required>
+            <input type="hidden" name="cv_url" id="jobCvUrl">
+          </div>
+
+          <div id="jobFormMsg" class="cf-form-msg" role="status" aria-live="polite"></div>
+
+          <button type="submit" class="cf-submit cta-primary" id="jobSubmitBtn">
+            <span class="cf-submit-text">Enviar solicitud</span>
+            <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M2.5 7h9M8 3.5L11.5 7 8 10.5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          </button>
+          <p class="cf-privacy">Al enviar este formulario aceptás nuestra <a href="#">política de privacidad</a>. Tus datos solo se usarán para procesos de selección.</p>
+        </div>
+      </form>
+    </div>
+  </div>
   <section class="hero" id="inicio">
     <div class="hero-glow"></div>
     <div class="hero-grid"><canvas id="heroGrid"></canvas></div>
@@ -2873,6 +3006,161 @@
 
       document.querySelectorAll('.mob-link, .mob-cta').forEach(function(link) {
         link.addEventListener('click', closeMenu);
+      });
+
+      // Job application modal: abrir desde nav desktop o móvil
+      var jobOverlay = document.getElementById('jobModalOverlay');
+      var jobClose = document.getElementById('jobModalClose');
+      var navJobLink = document.getElementById('navJobLink');
+      var mobJobLink = document.getElementById('mobJobLink');
+
+      function openJobModal() {
+        closeMenu();
+        jobOverlay.classList.add('open');
+        document.body.style.overflow = 'hidden';
+      }
+      function closeJobModal() {
+        jobOverlay.classList.remove('open');
+        document.body.style.overflow = '';
+      }
+
+      if (navJobLink) navJobLink.addEventListener('click', function(e) { e.preventDefault(); openJobModal(); });
+      if (mobJobLink) mobJobLink.addEventListener('click', function(e) { e.preventDefault(); openJobModal(); });
+      jobClose.addEventListener('click', closeJobModal);
+      jobOverlay.addEventListener('click', function(e) { if (e.target === jobOverlay) closeJobModal(); });
+      document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape' && jobOverlay.classList.contains('open')) closeJobModal();
+      });
+    })();
+  </script>
+
+  <!-- Job application form: file picker + Web3Forms submit -->
+  <script>
+    (function() {
+      var form = document.getElementById('jobForm');
+      if (!form) return;
+
+      var fileField = document.getElementById('jobFileField');
+      var fileBtn = document.getElementById('jobFileBtn');
+      var fileInput = document.getElementById('jobFileInput');
+      var fileName = document.getElementById('jobFileName');
+      var submitBtn = document.getElementById('jobSubmitBtn');
+      var btnText = submitBtn.querySelector('.cf-submit-text');
+      var msgBox = document.getElementById('jobFormMsg');
+
+      var MAX_SIZE = 5 * 1024 * 1024; // 5MB
+
+      function showMsg(text, type) {
+        msgBox.textContent = text;
+        msgBox.className = 'cf-form-msg show ' + type;
+      }
+      function clearMsg() {
+        msgBox.className = 'cf-form-msg';
+      }
+
+      fileBtn.addEventListener('click', function() { fileInput.click(); });
+
+      fileInput.addEventListener('change', function() {
+        var file = fileInput.files[0];
+        if (!file) {
+          fileField.classList.remove('has-file');
+          fileName.textContent = 'Ningún archivo seleccionado';
+          return;
+        }
+        var isPdf = file.type === 'application/pdf' || /\.pdf$/i.test(file.name);
+        if (!isPdf) {
+          showMsg('Solo se aceptan archivos en formato PDF.', 'error');
+          fileInput.value = '';
+          fileField.classList.remove('has-file');
+          fileName.textContent = 'Ningún archivo seleccionado';
+          return;
+        }
+        if (file.size > MAX_SIZE) {
+          showMsg('El archivo supera el límite de 5MB.', 'error');
+          fileInput.value = '';
+          fileField.classList.remove('has-file');
+          fileName.textContent = 'Ningún archivo seleccionado';
+          return;
+        }
+        if (file.name.length > 50) {
+          showMsg('El nombre del archivo es demasiado largo (máximo 50 caracteres). Por favor renombralo e intentá de nuevo.', 'error');
+          fileInput.value = '';
+          fileField.classList.remove('has-file');
+          fileName.textContent = 'Ningún archivo seleccionado';
+          return;
+        }
+        clearMsg();
+        fileField.classList.add('has-file');
+        fileName.textContent = file.name;
+      });
+
+      // ── Configuración Cloudinary ──
+      var CLOUDINARY_CLOUD_NAME = 'xqvuudxe';
+      var CLOUDINARY_UPLOAD_PRESET = 'cvs-solicitudes';
+
+      form.addEventListener('submit', function(e) {
+        e.preventDefault();
+
+        // Honeypot
+        if (form.botcheck && form.botcheck.checked) return;
+
+        var file = fileInput.files[0];
+        if (!file) {
+          showMsg('Por favor adjuntá tu CV en PDF.', 'error');
+          return;
+        }
+        if (file.name.length > 50) {
+          showMsg('El nombre del archivo es demasiado largo (máximo 50 caracteres). Por favor renombralo e intentá de nuevo.', 'error');
+          return;
+        }
+
+        submitBtn.disabled = true;
+        btnText.textContent = 'Subiendo CV...';
+        clearMsg();
+
+        var cloudForm = new FormData();
+        cloudForm.append('file', file);
+        cloudForm.append('upload_preset', CLOUDINARY_UPLOAD_PRESET);
+
+        fetch('https://api.cloudinary.com/v1_1/' + CLOUDINARY_CLOUD_NAME + '/auto/upload', {
+          method: 'POST',
+          body: cloudForm
+        })
+        .then(function(res) { return res.json(); })
+        .then(function(cloudResult) {
+          if (!cloudResult.secure_url) {
+            throw new Error('No se pudo subir el archivo');
+          }
+
+          document.getElementById('jobCvUrl').value = cloudResult.secure_url;
+          btnText.textContent = 'Enviando solicitud...';
+
+          var formData = new FormData(form);
+
+          return fetch('https://api.web3forms.com/submit', {
+            method: 'POST',
+            headers: { 'Accept': 'application/json' },
+            body: formData
+          });
+        })
+        .then(function(res) { return res.json(); })
+        .then(function(result) {
+          if (result.success) {
+            showMsg('¡Gracias! Tu solicitud fue enviada. Nuestro equipo de RRHH la revisará en los próximos días.', 'success');
+            form.reset();
+            fileField.classList.remove('has-file');
+            fileName.textContent = 'Ningún archivo seleccionado';
+          } else {
+            showMsg('No se pudo enviar la solicitud. Por favor intentá de nuevo.', 'error');
+          }
+        })
+        .catch(function() {
+          showMsg('Ocurrió un error al subir el CV o enviar la solicitud. Por favor intentá de nuevo.', 'error');
+        })
+        .finally(function() {
+          submitBtn.disabled = false;
+          btnText.textContent = 'Enviar solicitud';
+        });
       });
     })();
   </script>
